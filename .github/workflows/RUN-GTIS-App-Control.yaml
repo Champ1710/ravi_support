@@ -23,8 +23,6 @@ jobs:
   trigger-project-workflow:
     uses: ./.github/workflows/PROJECT-GTIS-App-Control.yaml
     with:
-      server: ${{ github.event.inputs.server }}
-      vault-folder: ${{ github.event.inputs.vault-folder }}
       action: ${{ github.event.inputs.action }}
       email-address: ${{ github.event.inputs.email-address }}
-      email-subject: ${{ github.event.inputs.email-subject }}
+      
