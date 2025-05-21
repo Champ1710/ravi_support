@@ -20,7 +20,6 @@ on:
         type: string
 
 jobs:
-  trigger-project-workflow:
     uses: ./.github/workflows/PROJECT-GTIS-App-Control.yaml
     with:
       action: ${{ github.event.inputs.action }}
