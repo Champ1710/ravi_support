@@ -24,5 +24,5 @@ jobs:
     uses: ./.github/workflows/PROJECT-GTIS-App-Control.yaml
     with:
       action: ${{ github.event.inputs.action }}
-      email-address: ${{ github.event.inputs.email-address }}
+      
       
