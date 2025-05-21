@@ -26,17 +26,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ inputs.server }} >> ~/.ssh/known_hosts
-
-      - name: Fetch secrets from Vault
-        run: |
-          echo "Simulating fetching secrets from Vault folder ${{ inputs.vault-folder }}"
-
       - name: Make scripts executable
         run: chmod +x scripts/*.sh
 
