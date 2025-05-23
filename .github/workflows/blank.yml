@@ -55,8 +55,8 @@ jobs:
           role: github-actions-role
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           secrets: |
-            products/${{ inputs.vault-folder }}/USER SSH_USER
-            products/${{ inputs.vault-folder }}/KEY SSH_KEY
+            products/${{ inputs.vault-folder }}/champ SSH_USER
+            products/${{ inputs.vault-folder }}/Step1 SSH_KEY
 
       - name: Debug SSH Key Presence
         run: |
