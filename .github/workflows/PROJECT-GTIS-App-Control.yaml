@@ -1,39 +1,63 @@
-name: PROJECT-GTIS-App-Control
+description: "Manages startup and shutdown operations for the GTIS application"
+
+env:
+  GIT_SSH_NO_VERIFY: "true"
 
 on:
   workflow_call:
     inputs:
       server:
+        description: "input into build for variable${server}"
         required: true
         type: string
+      timeout:
+        description: "Define the timeout for the ssh connection"
+        required: false
+        type: string
+        default: "300"
       vault-folder:
+        description: "Environment"
         required: true
         type: string
-      action:
-        required: true
-        type: string
-      email-address:
-        required: true
-        type: string
-      email-subject:
+        default: "ngas-gtis/dev/ssh"
+      ACTION:
+        description: "startup or shutdown"
         required: true
         type: string
 
 jobs:
-  run-script:
-    runs-on: ubuntu-latest
+  app-control:
+    name: Run ${{ inputs.ACTION }} script remotely
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+      security-events: write
+    runs-on: ${{ vars.RUNNERSET_DEFAULT }}
+
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - name: Get Secrets
+        uses: dukeenergy-corp/duke-actions/composite/vault-fetch@master
+        with:
+          deploy-environment: products/${{ inputs.vault-folder }}
+          secrets: |
+            ssh USER | SSH_USER;
+            ssh LCDCGTISAPPD01 | SSH_KEY;
 
-      - name: Make scripts executable
-        run: chmod +x scripts/*.sh
-
-      - name: Run the requested script
+      - name: Set SSH Identity File
         run: |
-          ./scripts/${{ inputs.action }}.sh ${{ inputs.server }}
+          sudo mkdir -p ~/.ssh
+          echo "$SSH_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          echo "SSH_KEY=private_key.pem" >> $GITHUB_ENV
 
-      - name: On failure notify via email
-        if: failure()
+      - name: Execute the script
         run: |
-          echo "Sending failure notification to ${{ inputs.email-address }}"
+          if [[ "${{ inputs.ACTION }}" == "startup" ]]; then
+            ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@${{ inputs.server }} 'bash -s' < startup.sh
+          elif [[ "${{ inputs.ACTION }}" == "shutdown" ]]; then
+            ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@${{ inputs.server }} 'bash -s' < shutdown.sh
+          else
+            echo "Invalid action: ${{ inputs.ACTION }}"
+            exit 1
+          fi
