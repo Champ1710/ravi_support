@@ -1,13 +1,14 @@
-description: "Manages startup and shutdown operations for the GTIS application"
+name: PROJECT-GTIS-App-Control
+description: Manages startup and shutdown operations for the GTIS application
 
 env:
-  GIT_SSH_NO_VERIFY: "true"
+  GIT_SSL_NO_VERIFY: "true"
 
 on:
   workflow_call:
     inputs:
       server:
-        description: "input into build for variable${server}"
+        description: "Input into build for variable(s){{server}}"
         required: true
         type: string
       timeout:
@@ -19,7 +20,7 @@ on:
         description: "Environment"
         required: true
         type: string
-        default: "ngas-gtis/dev/ssh"
+        default: "ngas-gtis/dev/ssh"  # ✅ Updated
       ACTION:
         description: "startup or shutdown"
         required: true
@@ -39,24 +40,24 @@ jobs:
       - name: Get Secrets
         uses: dukeenergy-corp/duke-actions/composite/vault-fetch@master
         with:
-          deploy-environment: products/${{ inputs.vault-folder }}
+          deploy-environment: products/${{ inputs.vault-folder }}  # ✅ Updated
           secrets: |
-            ssh USER | SSH_USER;
-            ssh LCDCGTISAPPD01 | SSH_KEY;
+            ssh USER | SSH_USER
+            ssh KEY  | SSH_KEY
 
       - name: Set SSH Identity File
         run: |
           sudo mkdir -p ~/.ssh
-          echo "$SSH_KEY" > private_key.pem
+          echo "${{ env.SSH_KEY }}" > private_key.pem
           chmod 600 private_key.pem
           echo "SSH_KEY=private_key.pem" >> $GITHUB_ENV
 
       - name: Execute the script
         run: |
           if [[ "${{ inputs.ACTION }}" == "startup" ]]; then
-            ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@${{ inputs.server }} 'bash -s' < startup.sh
+            bash startup.sh
           elif [[ "${{ inputs.ACTION }}" == "shutdown" ]]; then
-            ssh -i $SSH_KEY -o StrictHostKeyChecking=no $SSH_USER@${{ inputs.server }} 'bash -s' < shutdown.sh
+            bash shutdown.sh
           else
             echo "Invalid action: ${{ inputs.ACTION }}"
             exit 1
