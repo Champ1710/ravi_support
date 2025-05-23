@@ -1,0 +1,72 @@
+name: RUN-GTIS-App-Control-DEV
+
+on:
+  workflow_dispatch:
+    inputs:
+      server:
+        description: "Input into build for variable(${server})"
+        required: false
+        type: string
+        default: "LDCGTISAPP01"
+      action:
+        description: "Choose which remote script to run"
+        required: true
+        default: "startup"
+        type: choice
+        options:
+          - startup
+          - shutdown
+      vault-folder:
+        description: "Vault environment folder"
+        required: true
+        default: "ngas-gtis/dev/ssh"
+        type: string
+
+permissions:
+  actions: read
+  id-token: write
+  security-events: write
+  contents: read
+
+jobs:
+  app-control:
+    name: Run ${{ inputs.action }} script remotely
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get Secrets from Vault
+        uses: dukeenergy-corp/duke-actions/composite/vault-fetch@master
+        with:
+          deploy-environment: products/${{ inputs.vault-folder }}
+          secrets: |
+            ssh USER | SSH_USER
+            ssh KEY  | SSH_KEY
+
+      - name: Debug SSH Key Presence
+        run: |
+          if [ -z "${{ env.SSH_KEY }}" ]; then
+            echo "❌ SSH_KEY is empty or not set"
+            exit 1
+          else
+            echo "✅ SSH_KEY is present"
+          fi
+
+      - name: Set SSH Identity File
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ env.SSH_KEY }}" | tr -d '\r' > ~/.ssh/private_key.pem
+          chmod 600 ~/.ssh/private_key.pem
+          echo "SSH_KEY=~/.ssh/private_key.pem" >> $GITHUB_ENV
+
+      - name: Execute the script
+        run: |
+          export SSH_USER=${{ env.SSH_USER }}
+          export SERVER=${{ inputs.server }}
+          if [[ "${{ inputs.action }}" == "startup" ]]; then
+            bash startup.sh
+          elif [[ "${{ inputs.action }}" == "shutdown" ]]; then
+            bash shutdown.sh
+          else
+            echo "Invalid action: ${{ inputs.action }}"
+            exit 1
+          fi
