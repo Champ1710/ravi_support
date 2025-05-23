@@ -7,7 +7,7 @@ on:
         description: "Input into build for variable(${server})"
         required: false
         type: string
-        default: "LDCGTISAPP01"
+        default: "test-server"
       action:
         description: "Choose which remote script to run"
         required: true
@@ -41,17 +41,19 @@ jobs:
         id: vault-auth
         uses: hashicorp/vault-action@v2
         with:
-          url: https://vault.yourdomain.com  # 🔁 Replace with your Vault URL
+          url: https://champ071hcp.org
           method: github
-          role: github-actions-role  # 🔁 Replace with your Vault GitHub auth role
+          role: github-actions-role  # 🔁 Replace with your actual Vault GitHub auth role
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Read SSH secrets from Vault
         id: vault-secrets
         uses: hashicorp/vault-action@v2
         with:
-          url: https://vault.yourdomain.com  # 🔁 Replace with your Vault URL
+          url: https://champ071hcp.org
           method: github
           role: github-actions-role
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
           secrets: |
             products/${{ inputs.vault-folder }}/USER SSH_USER
             products/${{ inputs.vault-folder }}/KEY SSH_KEY
