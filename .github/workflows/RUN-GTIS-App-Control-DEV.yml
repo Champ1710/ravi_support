@@ -3,25 +3,35 @@ name: RUN-GTIS-App-Control-DEV
 on:
   workflow_dispatch:
     inputs:
-      ACTION:
-        description: "Startup or shutdown"
+      server:
+        description: "Input into build for variable(${server})"
+        required: false
+        type: string
+        default: "LDCGTISAPP01"
+      action:
+        description: "Choose which remote script to run"
         required: true
         default: "startup"
         type: choice
         options:
           - startup
           - shutdown
+      vault-folder:
+        description: "Vault environment folder"
+        required: true
+        default: "dev"
+        type: string
+
+permissions:
+  actions: read
+  id-token: write
+  security-events: write
+  contents: read
 
 jobs:
-  run-gtis-script:
+  app-control:
     uses: dukeenergy-corp/ngas_comops-build-deployment-repo/.github/workflows/PROJECT-GTIS-App-Control.yaml@master
     with:
-      server: "10.0.0.5"
-      timeout: "300"
-      vault-folder: "gtis/dev"
-      ACTION: ${{ inputs.ACTION }}
-    permissions:
-      contents: read
-      actions: read
-      id-token: write
-      security-events: write
+      server: ${{ github.event.inputs.server }}
+      vault-folder: ${{ github.event.inputs.vault-folder }}
+      ACTION: ${{ github.event.inputs.action }}
