@@ -1,3 +1,4 @@
+
 name: RUN-GTIS-App-Control-DEV
 
 on:
@@ -9,13 +10,9 @@ on:
         type: string
         default: "test-server"
       action:
-        description: "Choose which remote script to run"
+        description: "Choose which remote script to run (startup or shutdown)"
         required: true
         default: "startup"
-        type: choice
-        options:
-          - startup
-          - shutdown
       vault-folder:
         description: "Vault environment folder"
         required: true
@@ -70,7 +67,8 @@ jobs:
       - name: Set SSH Identity File
         run: |
           mkdir -p ~/.ssh
-          echo "${{ steps.vault-secrets.outputs.SSH_KEY }}" | tr -d '\r' > ~/.ssh/private_key.pem
+          echo "${{ steps.vault-secrets.outputs.SSH_KEY }}" | tr -d '
+' > ~/.ssh/private_key.pem
           chmod 600 ~/.ssh/private_key.pem
           echo "SSH_KEY=~/.ssh/private_key.pem" >> $GITHUB_ENV
 
@@ -85,4 +83,3 @@ jobs:
           else
             echo "Invalid action: ${{ inputs.action }}"
             exit 1
-          fi
