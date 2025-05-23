@@ -1,3 +1,4 @@
+
 name: RUN-GTIS-App-Control-DEV
 
 on:
@@ -24,8 +25,59 @@ permissions:
 
 jobs:
   app-control:
-    uses: dukeenergy-corp/ngas_comops-build-deployment-repo/.github/workflows/PROJECT-GTIS-App-Control.yaml@master
-    with:
-      server: ${{ github.event.inputs.server }}
-      vault-folder: ${{ github.event.inputs.vault-folder }}
-      ACTION: ${{ github.event.inputs.action }}
+    name: Run ${{ inputs.action }} script remotely
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate with Vault
+        id: vault-auth
+        uses: hashicorp/vault-action@v2
+        with:
+          url: https://champ071hcp.org
+          method: github
+          role: github-actions-role  # Replace with your actual Vault GitHub auth role
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Read SSH secrets from Vault
+        id: vault-secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: https://champ071hcp.org
+          method: github
+          role: github-actions-role
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          secrets: |
+            products/${{ inputs.vault-folder }}/champ SSH_USER
+            products/${{ inputs.vault-folder }}/Step1 SSH_KEY
+
+      - name: Debug SSH Key Presence
+        run: |
+          if [ -z "${{ steps.vault-secrets.outputs.SSH_KEY }}" ]; then
+            echo "❌ SSH_KEY is empty or not set"
+            exit 1
+          else
+            echo "✅ SSH_KEY is present"
+          fi
+
+      - name: Set SSH Identity File
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ steps.vault-secrets.outputs.SSH_KEY }}" | tr -d '
+' > ~/.ssh/private_key.pem
+          chmod 600 ~/.ssh/private_key.pem
+          echo "SSH_KEY=~/.ssh/private_key.pem" >> $GITHUB_ENV
+
+      - name: Execute the script
+        run: |
+          export SSH_USER="${{ steps.vault-secrets.outputs.SSH_USER }}"
+          export SERVER="${{ inputs.server }}"
+          if [[ "${{ inputs.action }}" == "startup" ]]; then
+            bash startup.sh
+          elif [[ "${{ inputs.action }}" == "shutdown" ]]; then
+            bash shutdown.sh
+          else
+            echo "Invalid action: ${{ inputs.action }}"
+            exit 1
