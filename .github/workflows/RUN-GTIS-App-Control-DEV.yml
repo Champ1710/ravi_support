@@ -6,21 +6,15 @@ on:
       server:
         description: "Input into build for variable(${server})"
         required: false
-        type: string
         default: "LDCGTISAPP01"
       action:
-        description: "Choose which remote script to run"
+        description: "Choose which remote script to run (startup or shutdown)"
         required: true
         default: "startup"
-        type: choice
-        options:
-          - startup
-          - shutdown
       vault-folder:
         description: "Vault environment folder"
         required: true
         default: "apps/sample-app"
-        type: string
 
 permissions:
   actions: read
