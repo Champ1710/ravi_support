@@ -19,7 +19,7 @@ on:
       vault-folder:
         description: "Vault environment folder"
         required: true
-        default: "ngas-gtis/dev/ssh"
+        default: "apps/sample-app"
         type: string
 
 permissions:
