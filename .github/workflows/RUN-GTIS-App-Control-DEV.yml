@@ -1,6 +1,4 @@
-
 name: RUN-GTIS-App-Control-DEV
-
 on:
   workflow_dispatch:
     inputs:
