@@ -1,6 +1,4 @@
 name: PROJECT-GTIS-App-Control
-description: Manages startup and shutdown operations for the GTIS application
-
 env:
   GIT_SSL_NO_VERIFY: "true"
 
@@ -20,7 +18,7 @@ on:
         description: "Environment"
         required: true
         type: string
-        default: "ngas-gtis/dev/ssh"  # ✅ Updated
+        default: "ngas-gtis/dev/ssh"
       ACTION:
         description: "startup or shutdown"
         required: true
@@ -37,23 +35,34 @@ jobs:
     runs-on: ${{ vars.RUNNERSET_DEFAULT }}
 
     steps:
-      - name: Get Secrets
+      - name: Get Secrets from Vault
         uses: dukeenergy-corp/duke-actions/composite/vault-fetch@master
         with:
-          deploy-environment: products/${{ inputs.vault-folder }}  # ✅ Updated
+          deploy-environment: products/${{ inputs.vault-folder }}
           secrets: |
             ssh USER | SSH_USER
             ssh KEY  | SSH_KEY
 
+      - name: Debug SSH Key Presence
+        run: |
+          if [ -z "${{ env.SSH_KEY }}" ]; then
+            echo "❌ SSH_KEY is empty or not set"
+            exit 1
+          else
+            echo "✅ SSH_KEY is present"
+          fi
+
       - name: Set SSH Identity File
         run: |
-          sudo mkdir -p ~/.ssh
-          echo "${{ env.SSH_KEY }}" > private_key.pem
-          chmod 600 private_key.pem
-          echo "SSH_KEY=private_key.pem" >> $GITHUB_ENV
+          mkdir -p ~/.ssh
+          echo "${{ env.SSH_KEY }}" | tr -d '\r' > ~/.ssh/private_key.pem
+          chmod 600 ~/.ssh/private_key.pem
+          echo "SSH_KEY=~/.ssh/private_key.pem" >> $GITHUB_ENV
 
       - name: Execute the script
         run: |
+          export SSH_USER=${{ env.SSH_USER }}
+          export SERVER=${{ inputs.server }}
           if [[ "${{ inputs.ACTION }}" == "startup" ]]; then
             bash startup.sh
           elif [[ "${{ inputs.ACTION }}" == "shutdown" ]]; then
@@ -62,3 +71,6 @@ jobs:
             echo "Invalid action: ${{ inputs.ACTION }}"
             exit 1
           fi
+
+
+ 
