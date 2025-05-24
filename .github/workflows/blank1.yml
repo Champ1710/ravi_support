@@ -1,3 +1,4 @@
+
 name: Test SSH Workflow Locally
 
 on:
@@ -17,6 +18,7 @@ jobs:
       - name: Set Dummy SSH Credentials
         run: |
           echo "SSH_USER=testuser" >> $GITHUB_ENV
+          mkdir -p ~/.ssh
           echo "${{ secrets.DUMMY_SSH_KEY }}" > ~/.ssh/private_key.pem
           chmod 600 ~/.ssh/private_key.pem
           echo "SSH_KEY=~/.ssh/private_key.pem" >> $GITHUB_ENV
