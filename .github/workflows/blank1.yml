@@ -1,0 +1,25 @@
+name: Test SSH Workflow Locally
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-ssh:
+    runs-on: ubuntu-latest
+    env:
+      SERVER: dummy-server
+      DRY_RUN: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set Dummy SSH Credentials
+        run: |
+          echo "SSH_USER=testuser" >> $GITHUB_ENV
+          echo "${{ secrets.DUMMY_SSH_KEY }}" > ~/.ssh/private_key.pem
+          chmod 600 ~/.ssh/private_key.pem
+          echo "SSH_KEY=~/.ssh/private_key.pem" >> $GITHUB_ENV
+
+      - name: Run startup script
+        run: bash startup.sh
