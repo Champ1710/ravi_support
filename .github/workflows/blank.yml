@@ -1,4 +1,3 @@
-
 name: RUN-GTIS-App-Control-DEV
 
 on:
@@ -27,6 +26,7 @@ jobs:
   app-control:
     name: Run ${{ inputs.action }} script remotely
     runs-on: ubuntu-latest
+    environment: devserver
 
     steps:
       - name: Checkout repository
@@ -38,7 +38,7 @@ jobs:
         with:
           url: https://champ071hcp.org
           method: github
-          role: github-actions-role  # Replace with your actual Vault GitHub auth role
+          role: github-actions-role
           githubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Read SSH secrets from Vault
@@ -65,8 +65,7 @@ jobs:
       - name: Set SSH Identity File
         run: |
           mkdir -p ~/.ssh
-          echo "${{ steps.vault-secrets.outputs.SSH_KEY }}" | tr -d '
-' > ~/.ssh/private_key.pem
+          echo "${{ steps.vault-secrets.outputs.SSH_KEY }}" | tr -d '\r' > ~/.ssh/private_key.pem
           chmod 600 ~/.ssh/private_key.pem
           echo "SSH_KEY=~/.ssh/private_key.pem" >> $GITHUB_ENV
 
