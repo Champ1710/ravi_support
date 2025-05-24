@@ -36,7 +36,7 @@ jobs:
         id: vault-auth
         uses: hashicorp/vault-action@v2
         with:
-          url: https://champ071hcp.org
+          url: https://your-cluster-name.vault.your-region.hcp.hashicorp.cloud  # 🔁 Replace with your actual Vault URL
           method: github
           role: github-actions-role
           githubToken: ${{ secrets.GITHUB_TOKEN }}
@@ -45,7 +45,7 @@ jobs:
         id: vault-secrets
         uses: hashicorp/vault-action@v2
         with:
-          url: https://champ071hcp.org
+          url: https://your-cluster-name.vault.your-region.hcp.hashicorp.cloud  # 🔁 Replace with your actual Vault URL
           method: github
           role: github-actions-role
           githubToken: ${{ secrets.GITHUB_TOKEN }}
