@@ -1,4 +1,5 @@
 name: RUN-GTIS-App-Control-DEV
+
 on:
   workflow_dispatch:
     inputs:
@@ -14,6 +15,10 @@ on:
         description: "Vault environment folder"
         required: true
         default: "apps/sample-app"
+      dry-run:
+        description: "Enable dry-run mode to simulate SSH"
+        required: false
+        default: "true"
 
 permissions:
   actions: read
@@ -36,7 +41,7 @@ jobs:
         with:
           url: https://champ071hcp.org
           method: github
-          role: github-actions-role  # Replace with your actual Vault GitHub auth role
+          role: github-actions-role
           githubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Read SSH secrets from Vault
@@ -58,13 +63,13 @@ jobs:
             exit 1
           else
             echo "✅ SSH_KEY is present"
+            echo "🔐 First 20 chars: $(echo "${{ steps.vault-secrets.outputs.SSH_KEY }}" | cut -c1-20)"
           fi
 
       - name: Set SSH Identity File
         run: |
           mkdir -p ~/.ssh
-          echo "${{ steps.vault-secrets.outputs.SSH_KEY }}" | tr -d '
- > ~/.ssh/private_key.pem
+          echo "${{ steps.vault-secrets.outputs.SSH_KEY }}" > ~/.ssh/private_key.pem
           chmod 600 ~/.ssh/private_key.pem
           echo "SSH_KEY=~/.ssh/private_key.pem" >> $GITHUB_ENV
 
@@ -72,6 +77,7 @@ jobs:
         run: |
           export SSH_USER="${{ steps.vault-secrets.outputs.SSH_USER }}"
           export SERVER="${{ inputs.server }}"
+          export DRY_RUN="${{ inputs.dry-run }}"
           if [[ "${{ inputs.action }}" == "startup" ]]; then
             bash startup.sh
           elif [[ "${{ inputs.action }}" == "shutdown" ]]; then
@@ -79,3 +85,4 @@ jobs:
           else
             echo "Invalid action: ${{ inputs.action }}"
             exit 1
+          fi
